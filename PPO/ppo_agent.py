@@ -68,7 +68,7 @@ class PPOagent(object):
     def train(self, max_episode_num):
         batch_state, batch_action, batch_reward = [], [], []
         batch_log_old_policy_pdf = []
-        
+       
         for ep in range(int(max_episode_num)):
             
             time, episode_reward, done = 0, 0, False

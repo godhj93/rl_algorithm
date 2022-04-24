@@ -7,8 +7,8 @@ def main():
     env = gym.make(env_name)
     agent = PPOagent(env)
     
-    agent.actor.load_weights('./save_weights/')
-    agent.critic.load_weights('./save_weights/')
+    agent.actor.load_weights('PPO/save_weights/')
+    agent.critic.load_weights('PPO/save_weights/')
     
     time = 0
     state = env.reset()
