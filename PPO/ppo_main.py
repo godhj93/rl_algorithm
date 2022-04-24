@@ -1,6 +1,6 @@
 import gym
 from ppo_agent import PPOagent
-
+import os
 def main():
     
     max_episode_num = 1000
@@ -9,6 +9,8 @@ def main():
     agent = PPOagent(env)
     
     agent.train(max_episode_num)
+    
+    
     
     agent.plot_result()
     

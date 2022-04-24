@@ -26,8 +26,8 @@ class PPOagent(object):
         
         self.action_dim = env.action_space.shape[0]
         
-        self.action_bound = env.action_space.high[0]
-        
+        self.action_bound = env.action_space.high[0] #2.0
+        # print('action bound:', self.action_bound)
         self.actor = Actor( self.state_dim, self.action_dim, self.action_bound, self.ACTOR_LEARNING_RATE, self.RATIO_CLIPPING)
         self.critic = Critic(self.state_dim, self.action_dim, self.CRITIC_LEARNING_RATE)
         
@@ -129,23 +129,18 @@ class PPOagent(object):
                 episode_reward += reward[0] 
                 time += 1
                 
-                print(f'Episode: {ep+1}, Time: {time}, Reward: {episode_reward}')
-                self.save_epi_reward.append(episode_reward)
+            print(f'Episode: {ep+1}, Time: {time}, Reward: {episode_reward}')
+            self.save_epi_reward.append(episode_reward)
+            
+            if ep % 10 == 0:
+                self.actor.save_weights("./PPO/save_weights/pendulum_actor.h5")
+                self.critic.save_weights("./PPO/save_weights/pendulum_critic.h5")
                 
-                if ep % 10 == 0:
-                    self.actor.save_weights("./save_weights/pendulum_actor.h5")
-                    self.critic.save_weights("./save_weights/pendulum_critic.h5")
-                    
-                np.savetxt('./save_weights/pendulum_epi_reward.txt', self.save_epi_reward)
-                #print(self.save_epi_reward)
-                
-            def plot_result(self):
-                plt.plot(self.save_epi_reward)
-                plt.show()
-                
-                
-                
-                
+            np.savetxt('./PPO/save_weights/pendulum_epi_reward.txt', self.save_epi_reward)
+            #print(self.save_epi_reward)
+            
+    def plot_result(self):
+        plt.plot(self.save_epi_reward)
+        plt.show()
         
-        
-        
+  

@@ -18,14 +18,14 @@ class Actor(object):
         self.learning_rate = learning_rate
         self.ratio_clipping = ratio_clipping
         
-        self.std_bound = [1e-3, 1.0]
+        self.std_bound = [1e-2, 1.0]
         
         self.model, self.theta, self.states = self.build_network()
         
-        self.actions = [self.action_dim]
-        self.advantages = [1]
+        self.actions = [float(self.action_dim)]
+        self.advantages = [1.0]
     
-        self.log_old_policy_pdf = [1]
+        self.log_old_policy_pdf = [1.0]
         
         # mu_a, std_a = self.model.output
         # log_policy_pdf = self.log_pdf(mu_a, std_a, self.actions)
@@ -48,6 +48,7 @@ class Actor(object):
         std_output = Dense(self.action_dim, activation='softplus')(h3)
         
         mu_output = Lambda(lambda x: x*self.action_bound)(out_mu)
+        
         model = Model(state_input, [mu_output, std_output])
         model.summary()
         return model, model.trainable_weights, state_input
@@ -56,9 +57,10 @@ class Actor(object):
         
         std = tf.clip_by_value(std, self.std_bound[0], self.std_bound[1])
         var = std**2
-        #print("hello",action, mu, var)
+        
         log_policy_pdf = -0.5 * (action - mu) **2 /var- 0.5 * tf.math.log(var * 2 * np.pi)
-        return tf.reduce_sum(log_policy_pdf, 1, keepdims=True)
+        
+        return tf.reduce_sum(log_policy_pdf,1,keepdims=True)#tf.clip_by_value(log_policy_pdf, +1e-20, 1e+20), 1, keepdims=True)
     
     def get_policy_action(self, state):
         mu_a, std_a = self.model.predict(np.reshape(state, [1, self.state_dim]))
@@ -76,14 +78,21 @@ class Actor(object):
         
         with tf.GradientTape() as tape:
             
-            mu_a, std_a = self.model(states, training=True)
+            self.actions = actions
+            self.advantages = advantages
+            self.log_old_policy_pdf = log_old_policy_pdf
+            self.states = states
             
+            mu_a, std_a = self.model(self.states, training=True)
             log_policy_pdf = self.log_pdf(mu_a, std_a, self.actions)
             
-            ratio = tf.exp(log_policy_pdf - self.log_old_policy_pdf)
+            ratio = tf.math.exp(log_policy_pdf - self.log_old_policy_pdf)
             
+            
+
             clipped_ratio = tf.clip_by_value(ratio, 1.0-self.ratio_clipping, 1.0+self.ratio_clipping)
             surrogate = -tf.minimum(ratio * self.advantages, clipped_ratio * self.advantages)
+            #self.advantages update?
             loss = tf.reduce_mean(surrogate)
             
         # dj_dtheta = tf.gradients(loss, self.theta)
