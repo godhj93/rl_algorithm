@@ -3,7 +3,7 @@ from ppo_agent import PPOagent
 import os
 def main():
     
-    max_episode_num = 1000
+    max_episode_num = 100000
     env_name = 'Pendulum-v1'
     env = gym.make(env_name)
     agent = PPOagent(env)

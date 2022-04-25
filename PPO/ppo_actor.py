@@ -2,6 +2,7 @@ import numpy as np
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, Input, Lambda
 import tensorflow as tf
+import larq 
 
 class Actor(object):
     '''
@@ -41,11 +42,27 @@ class Actor(object):
     def build_network(self):
         
         state_input = Input((self.state_dim,))
+        # h1 = Dense(64, activation='relu')(state_input)
+        # h2 = Dense(32, activation='relu')(h1)
+        # h3 = Dense(16, activation='relu')(h2)
+        
         h1 = Dense(64, activation='relu')(state_input)
-        h2 = Dense(32, activation='relu')(h1)
-        h3 = Dense(16, activation='relu')(h2)
-        out_mu = Dense(self.action_dim, activation='tanh')(h3)
-        std_output = Dense(self.action_dim, activation='softplus')(h3)
+        h2 = tf.keras.layers.BatchNormalization()(h1)
+        h3 = larq.layers.QuantDense(64, kernel_quantizer='ste_sign', kernel_constraint=larq.constraints.WeightClip(1.3), activation='relu')(h2)
+        h4 = tf.keras.layers.BatchNormalization()(h3)
+        h5 = larq.layers.QuantDense(32, kernel_quantizer='ste_sign', kernel_constraint=larq.constraints.WeightClip(1.3), activation='relu')(h4)
+        h6 = tf.keras.layers.BatchNormalization()(h5)
+        h7 = larq.layers.QuantDense(32, kernel_quantizer='ste_sign', kernel_constraint=larq.constraints.WeightClip(1.3), activation='relu')(h6)
+        h8 = tf.keras.layers.BatchNormalization()(h7)
+        h9 = Dense(16, activation='relu')(h8)
+        
+        
+        # out_mu = Dense(self.action_dim, activation='tanh')(h3)
+        # std_output = Dense(self.action_dim, activation='softplus')(h3)
+        
+        
+        out_mu = Dense(self.action_dim, activation='tanh')(h9)
+        std_output = Dense(self.action_dim, activation='softplus')(h9)
         
         mu_output = Lambda(lambda x: x*self.action_bound)(out_mu)
         

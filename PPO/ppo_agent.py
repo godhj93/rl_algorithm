@@ -77,7 +77,7 @@ class PPOagent(object):
             
             while not done:
                 
-                self.env.render()
+                # self.env.render()
                 
                 mu_old, std_old, action = self.actor.get_policy_action(state)
                 
